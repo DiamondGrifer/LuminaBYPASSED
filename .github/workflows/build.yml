@@ -25,9 +25,14 @@ jobs:
         run: |
           if [ -f LuminaClient.zip ]; then
             unzip -o LuminaClient.zip -d LuminaSource
-            cp -r LuminaSource/*/* . 2>/dev/null || cp -r LuminaSource/* . 2>/dev/null || true
+            # Если внутри архива есть папка, перемещаем содержимое в корень
+            if [ -d LuminaSource/* ] && [ ! -f LuminaSource/build.gradle.kts ]; then
+              mv LuminaSource/*/* . 2>/dev/null || true
+            else
+              cp -r LuminaSource/* . 2>/dev/null || true
+            fi
           else
-            echo "❌ LuminaClient.zip не найден!"
+            echo "❌ LuminaClient.zip не найден в корне репозитория!"
             exit 1
           fi
 
@@ -44,7 +49,7 @@ jobs:
                 "client_info": {
                   "mobilesdk_app_id": "1:000000000000:android:0000000000000000",
                   "android_client_info": {
-                    "package_name": "com.projectlumina.luminaclient"
+                    "package_name": "com.project.lumina.client"
                   }
                 }
               }
