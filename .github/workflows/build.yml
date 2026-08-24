@@ -1,0 +1,50 @@
+name: Build Lumina APK from ZIP
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Unzip LuminaClient.zip
+        run: |
+          # Если архив лежит в корне репозитория
+          if [ -f LuminaClient.zip ]; then
+            unzip -o LuminaClient.zip -d LuminaSource
+            # Если внутри архива есть вложенная папка, перемещаем содержимое на уровень выше
+            if [ -d LuminaSource/* ]; then
+              mv LuminaSource/*/* LuminaSource/ 2>/dev/null || true
+            fi
+            # Копируем всё в корень для сборки
+            cp -r LuminaSource/* .
+          else
+            echo "❌ LuminaClient.zip не найден в корне репозитория!"
+            exit 1
+          fi
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build APK
+        run: ./gradlew app:assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Lumina-Patched
+          path: app/build/outputs/apk/debug/*.apk
