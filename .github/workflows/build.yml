@@ -23,19 +23,34 @@ jobs:
 
       - name: Unzip LuminaClient.zip
         run: |
-          # Если архив лежит в корне репозитория
           if [ -f LuminaClient.zip ]; then
             unzip -o LuminaClient.zip -d LuminaSource
-            # Если внутри архива есть вложенная папка, перемещаем содержимое на уровень выше
-            if [ -d LuminaSource/* ]; then
-              mv LuminaSource/*/* LuminaSource/ 2>/dev/null || true
-            fi
-            # Копируем всё в корень для сборки
-            cp -r LuminaSource/* .
+            cp -r LuminaSource/*/* . 2>/dev/null || cp -r LuminaSource/* . 2>/dev/null || true
           else
-            echo "❌ LuminaClient.zip не найден в корне репозитория!"
+            echo "❌ LuminaClient.zip не найден!"
             exit 1
           fi
+
+      - name: Create google-services.json
+        run: |
+          mkdir -p app
+          echo '{
+            "project_info": {
+              "project_number": "000000000000",
+              "project_id": "dummy-project"
+            },
+            "client": [
+              {
+                "client_info": {
+                  "mobilesdk_app_id": "1:000000000000:android:0000000000000000",
+                  "android_client_info": {
+                    "package_name": "com.projectlumina.luminaclient"
+                  }
+                }
+              }
+            ],
+            "configuration_version": "1"
+          }' > app/google-services.json
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
